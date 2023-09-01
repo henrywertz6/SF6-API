@@ -1,23 +1,26 @@
-from database import Base
-from sqlalchemy import Column, Integer, String
-class Character(Base):
-    __tablename__ = "moves"
+from sqlmodel import SQLModel, Field
+from typing import Optional
+class Move(SQLModel, table=True):
+    character: str
+    id: Optional[int] = Field(primary_key=True)
+    name: str
+    startup: Optional[int] = None
+    active: Optional[int] = None
+    recovery: Optional[int] = None
+    onHit: Optional[int] = None
+    onBlock: Optional[int] = None
+    cancel: str
+    damage: Optional[int] = None
+    comboScaling: str
+    dgHitIncrease: Optional[int] = None
+    dgBlockDecrease: Optional[int] = None
+    dgPunishDecrease: Optional[int] = None
+    superArtIncrease: Optional[int] = None
+    hitboxProperty: str
+    extraInfo: str
 
-    id = Column(Integer, primary_key=True, nullable=False)
-    
-    name = Column(String, nullable=False)
-    startup = Column(Integer)
-    active = Column(Integer)
-    recovery = Column(Integer)
-    onHit = Column(String)
-    onBlock = Column(Integer)
-    cancel = Column(String)
-    damage = Column(Integer)
-    comboScaling = Column(String)
-    dgHitIncrease = Column(Integer)
-    dgBlockDecrease = Column(Integer)
-    dgPunishDecrease = Column(Integer)
-    superArtIncrease = Column(Integer)
-    hitboxProperty = Column(String)
-    extraInfo = Column(String)
-
+class Character(SQLModel, table=True):
+    name: str = Field(primary_key=True)
+    vitality: int
+    height: str
+    weight: str

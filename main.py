@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
+from datascraper import data_scrape
 import models
+from models import Character
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal
 
@@ -21,5 +23,9 @@ def root():
 
 
 @app.get("/test")
-def test_api(db: Session = Depends(get_db)):
+def test_api(character: Character, db: Session = Depends(get_db)):
+    return {"status": "success"}
+
+@app.post("/test")
+def input_characters(db: Session = Depends(get_db)):
     return {"status": "success"}
