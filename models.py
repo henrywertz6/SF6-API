@@ -25,3 +25,19 @@ class Character(SQLModel, table=True):
     vitality: int
     height: str
     weight: str
+
+class APIResource(SQLModel):
+    name: str
+    url: str
+
+class CharacterOut(SQLModel):
+    name: str
+    vitality: int
+    height: str
+    weight: str
+    normal_moves: list["APIResource"]
+    unique_attacks: list["APIResource"]
+    special_moves: list["APIResource"]
+    super_arts: list["APIResource"]
+    throws: list["APIResource"]
+    common_moves: list["APIResource"]

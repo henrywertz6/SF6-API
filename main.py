@@ -1,31 +1,19 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
-from datascraper import data_scrape
-import models
-from models import Character
-from sqlalchemy.orm import Session
-from database import engine, SessionLocal
+from models import Character, Move
+from sqlmodel import SQLModel, Field, Session, create_engine, select
+from database import engine
 
-models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
-@app.get("/")
-def root():
-    return {"message": "Welcome to the api"}
 
+@app.get("/character/{name}")
+def root(name: str):
+    with Session(engine) as session:
+        character = session.get(Character, name)
+        if not character:
+            raise HTTPException(status_code=404, detail="Character not found")
+        return character
 
-@app.get("/test")
-def test_api(character: Character, db: Session = Depends(get_db)):
-    return {"status": "success"}
-
-@app.post("/test")
-def input_characters(db: Session = Depends(get_db)):
-    return {"status": "success"}
