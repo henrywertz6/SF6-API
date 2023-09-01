@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field
-from typing import Optional
+from typing import Optional, List
 class Move(SQLModel, table=True):
     character: str
     id: Optional[int] = Field(primary_key=True)
@@ -35,9 +35,9 @@ class CharacterOut(SQLModel):
     vitality: int
     height: str
     weight: str
-    normal_moves: list["APIResource"]
-    unique_attacks: list["APIResource"]
-    special_moves: list["APIResource"]
-    super_arts: list["APIResource"]
-    throws: list["APIResource"]
-    common_moves: list["APIResource"]
+    normal_moves: List["APIResource"]
+    unique_attacks: List["APIResource"]
+    special_moves: List["APIResource"]
+    super_arts: List["APIResource"]
+    throws: List["APIResource"]
+    common_moves: List["APIResource"]
