@@ -4,6 +4,7 @@ class Move(SQLModel, table=True):
     character: str
     id: Optional[int] = Field(primary_key=True)
     name: str
+    type: str
     startup: Optional[int] = None
     active: Optional[int] = None
     recovery: Optional[int] = None

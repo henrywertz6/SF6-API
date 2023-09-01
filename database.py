@@ -25,7 +25,6 @@ def create_moves():
     session = Session(engine)
     
     characterData = get_frame_data(driver)
-    print("Here's the data: ", characterData)
     for character in character_names:
         for moveList in characterData[character]:
             for moveType in moveList:
@@ -33,7 +32,7 @@ def create_moves():
                 
                     removeExtras = moveAttributes[0].split("\n")
                     moveAttributes[0] = removeExtras[0]
-                    db_move = Move(name=moveAttributes[0], startup=moveAttributes[1], active=moveAttributes[2], recovery=moveAttributes[3],
+                    db_move = Move(name=moveAttributes[0], type=moveType, startup=moveAttributes[1], active=moveAttributes[2], recovery=moveAttributes[3],
                                             onHit=moveAttributes[4], onBlock=moveAttributes[5], cancel=moveAttributes[6], damage=moveAttributes[7],
                                             comboScaling=moveAttributes[8], dgHitIncrease=moveAttributes[9], dgBlockDecrease=moveAttributes[10],
                                             dgPunishDecrease=moveAttributes[11], superArtIncrease=moveAttributes[12], hitboxProperty=moveAttributes[13],
@@ -46,17 +45,19 @@ def create_moves():
 
 def create_character():
     session = Session(engine)
-
-    for character in character_names:
-        db_character = Character(name=character, )
-def main():
-    # create_db_and_tables()
-    # create_moves()
     char_details = get_character_data(driver)
     for character in character_names:
         for detailsList in char_details[character]:
-            for detail in detailsList:
-                print(detail)
+            db_character = Character(name=detailsList["name"], vitality=detailsList["vitality"], height=detailsList["height"], weight=detailsList["weight"])
+            session.add(db_character)
+    session.commit()
+    session.close()
+            
+def main():
+    create_db_and_tables()
+    create_moves()
+    create_character()
+    
 
 if __name__ == "__main__":
     main()

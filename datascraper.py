@@ -66,11 +66,13 @@ def get_character_data(driver):
         removeLine = vitality_element[0].text.split("\n")
         vitality = removeLine[1]
         driver.get(f'https://www.streetfighter.com/6/character/{character}')
-        desc = driver.find_element(By.CLASS_NAME, "detail_info__item__text__JV6QL")
+        desc = driver.find_elements(By.CLASS_NAME, "detail_info__item__text__JV6QL")
+        
+        characterDetails["name"] = character
         characterDetails["vitality"] = vitality
-        print(desc[2].text)
-        characterDetails["height"] = desc[2].text
-        characterDetails["weight"] = desc[3].text
+        characterDetails["height"] = desc[2].get_attribute("textContent")
+        characterDetails["weight"] = desc[3].get_attribute("textContent")
+        
 
         character_detail_list[character].append(characterDetails)
     return character_detail_list
