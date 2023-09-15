@@ -1,80 +1,89 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from models import Character, Move, CharacterOut, APIResource
 from sqlmodel import SQLModel, Field, Session, create_engine, select
-from database import engine
+from typing import List
+from deta import Deta
 
 
 app = FastAPI()
+deta = Deta()
+
+dbCharacters = deta.Base("characters")
+
+dbMoves = deta.Base("moves")
 
 
 
+@app.get("/api/characters", response_model=List[Character])
+def get_all_characters():
+    all_characters = dbCharacters.fetch()
+    resultList = []
+    for item in all_characters.items:
+        character = Character(name=item["name"], vitality=item["vitality"], height=item["height"], weight=item["weight"])
+        resultList.append(character)
+    return resultList
 
-@app.get("/character/{name}")
+@app.get("/api/characters/{name}", response_model=CharacterOut)
 def get_character(name: str):
-    with Session(engine) as session:
-        character = session.get(Character, name)
-        if not character:
-            raise HTTPException(status_code=404, detail="Character not found")
-        # Get normal moves APIResources
-        statement = select(Move).where(Move.character == name, Move.type == "Normal Moves")
-        results = session.exec(statement)
-        normal_moves = []
-        for result in results:
-            normal_moves.append(APIResource(name=result.name, url=f"http://127.0.0.1:8000/move/{result.id}"))
-        
-        # Get unique attacks APIResources
-        statement = select(Move).where(Move.character == name, Move.type == "Unique Attacks")
-        results = session.exec(statement)
-        unique_attacks = []
-        for result in results:
-            unique_attacks.append(APIResource(name=result.name, url=f"http://127.0.0.1:8000/move/{result.id}"))
+    character_response = dbCharacters.fetch({"name": name})
+    if (len(character_response.items) == 0):
+        raise HTTPException(status_code=404, detail="Character not found")
+    # Get normal moves APIResources
+    response = dbMoves.fetch({"character": name, "type": "Normal Moves"})
+    normal_moves = []
+    for item in response.items:
+        normal_moves.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
+    
+            
+    # Get unique attacks APIResources
+    response = dbMoves.fetch({"character": name, "type": "Unique Attacks"})
+    unique_attacks = []
+    for item in response.items:
+        unique_attacks.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
 
-        # Get special moves APIResources
-        statement = select(Move).where(Move.character == name, Move.type == "Special Moves")
-        results = session.exec(statement)
-        special_moves = []
-        for result in results:
-            special_moves.append(APIResource(name=result.name, url=f"http://127.0.0.1:8000/move/{result.id}"))
+    # Get special moves APIResources
+    response = dbMoves.fetch({"character": name, "type": "Special Moves"})
+    special_moves = []
+    for item in response.items:
+        special_moves.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
 
-        # Get super arts APIResources
-        statement = select(Move).where(Move.character == name, Move.type == "Super Arts")
-        results = session.exec(statement)
-        super_arts = []
-        for result in results:
-            super_arts.append(APIResource(name=result.name, url=f"http://127.0.0.1:8000/move/{result.id}"))
+    # Get super arts APIResources
+    response = dbMoves.fetch({"character": name, "type": "Super Arts"})
+    super_arts = []
+    for item in response.items:
+        super_arts.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
 
-        # Get throws APIResources
-        statement = select(Move).where(Move.character == name, Move.type == "Throws")
-        results = session.exec(statement)
-        throws = []
-        for result in results:
-            throws.append(APIResource(name=result.name, url=f"http://127.0.0.1:8000/move/{result.id}"))
+    # Get throws APIResources
+    response = dbMoves.fetch({"character": name, "type": "Throws"})
+    throws = []
+    for item in response.items:
+        throws.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
 
-        # Get common moves APIResources
-        statement = select(Move).where(Move.character == name, Move.type == "Common Moves")
-        results = session.exec(statement)
-        common_moves = []
-        for result in results:
-            common_moves.append(APIResource(name=result.name, url=f"http://127.0.0.1:8000/move/{result.id}"))
+    # Get common moves APIResources
+    response = dbMoves.fetch({"character": name, "type": "Common Moves"})
+    common_moves = []
+    for item in response.items:
+        common_moves.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
 
 
-        character_response = CharacterOut(
-            name=character.name,
-            vitality=character.vitality,
-            height=character.height,
-            weight=character.weight,
-            normal_moves=normal_moves,
-            unique_attacks=unique_attacks,
-            special_moves=special_moves,
-            super_arts=super_arts,
-            throws=throws,
-            common_moves=common_moves
-        )
-        
-        return character_response
+    character_out = CharacterOut(
+        name=character_response.items[0]["name"],
+        vitality=character_response.items[0]["vitality"],
+        height=character_response.items[0]["height"],
+        weight=character_response.items[0]["weight"],
+        normal_moves=normal_moves,
+        unique_attacks=unique_attacks,
+        special_moves=special_moves,
+        super_arts=super_arts,
+        throws=throws,
+        common_moves=common_moves
+    )
+    
+    return character_out
 
-@app.get("/move/{id}")
+@app.get("/api/move/{id}")
 def get_move_info(id: int):
-    with Session(engine) as session:
-        move = session.get(Move, id)
-        return move
+    move_response = dbMoves.fetch({"id": id})
+    if (len(move_response.items) == 0):
+        raise HTTPException(status_code=404, detail=f"Move with id {id} does not exist")
+    return move_response.items[0]

@@ -46,6 +46,7 @@ def get_frame_data(driver):
                 move = list(filter(None, move))
         # print(moveList)
         characterMoveList[character].append(moveList)
+        print("loaded character data")
     return characterMoveList
 
 def get_character_data(driver):

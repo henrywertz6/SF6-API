@@ -1,29 +1,22 @@
 from typing import Optional
 from datascraper import get_frame_data, get_character_data
-from settings import password
 from sqlmodel import create_engine, SQLModel, Session
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from models import Move, Character
-
-SQLALCHEMY_DATABASE_URL = f'postgresql://postgres:{password}@localhost/SF6API'
-options = Options()
-options.add_argument("--headless=new")
-driver = webdriver.Chrome(options=options)
+from deta import Deta
+from fastapi.encoders import jsonable_encoder
 
 
 
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+
 character_names = ['rashid', 'cammy', 'lily', 'zangief', 'jp', 'marisa', 'manon', 'deejay', 'ehonda', 'dhalsim', 'blanka', 'ken', 'juri', 'kimberly', 'guile', 'chunli', 'jamie', 'luke', 'ryu']
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
 
-def create_moves():
-    session = Session(engine)
-    
+def create_moves(dbMoves, driver):
+    id = 0
     characterData = get_frame_data(driver)
     for character in character_names:
         for moveList in characterData[character]:
@@ -36,25 +29,25 @@ def create_moves():
                                             onHit=moveAttributes[4], onBlock=moveAttributes[5], cancel=moveAttributes[6], damage=moveAttributes[7],
                                             comboScaling=moveAttributes[8], dgHitIncrease=moveAttributes[9], dgBlockDecrease=moveAttributes[10],
                                             dgPunishDecrease=moveAttributes[11], superArtIncrease=moveAttributes[12], hitboxProperty=moveAttributes[13],
-                                            extraInfo=moveAttributes[14], character=character)
-                    session.add(db_move)
+                                            extraInfo=moveAttributes[14], character=character, id=id)
+                    dbMoves.put(jsonable_encoder(db_move), str(id))
+                    print("added a move")
+                    id += 1
+    print("we done for now")
                 
-    session.commit()
     
-    session.close()
 
-def create_character():
-    session = Session(engine)
+def create_character(dbCharacters, driver):
     char_details = get_character_data(driver)
     for character in character_names:
         for detailsList in char_details[character]:
             db_character = Character(name=detailsList["name"], vitality=detailsList["vitality"], height=detailsList["height"], weight=detailsList["weight"])
-            session.add(db_character)
-    session.commit()
-    session.close()
+            dbCharacters.put(jsonable_encoder(db_character))
+            print("we doing this shit")
+            
+    
             
 def main():
-    create_db_and_tables()
     create_moves()
     create_character()
     
