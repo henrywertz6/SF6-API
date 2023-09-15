@@ -23,54 +23,85 @@ def get_all_characters():
         resultList.append(character)
     return resultList
 
-@app.get("/api/characters/{name}", response_model=CharacterOut)
-def get_character(name: str):
-    character_response = dbCharacters.fetch({"name": name})
-    if (len(character_response.items) == 0):
+async def fetchName(name):
+    response = dbCharacters.fetch({"name": name})
+    if (len(response.items) == 0):
         raise HTTPException(status_code=404, detail="Character not found")
-    # Get normal moves APIResources
-    response = dbMoves.fetch({"character": name, "type": "Normal Moves"})
+    return response.items
+
+async def fetchNormals(name):
+    response =  dbMoves.fetch({"character": name, "type": "Normal Moves"})
     normal_moves = []
     for item in response.items:
-        normal_moves.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
-    
-            
-    # Get unique attacks APIResources
+        normal_moves.append(APIResource(name=item["name"], url=f"http://sfapi.co/api/move/{item['id']}"))
+    return normal_moves
+
+async def fetchUniques(name):
     response = dbMoves.fetch({"character": name, "type": "Unique Attacks"})
     unique_attacks = []
     for item in response.items:
-        unique_attacks.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
+        unique_attacks.append(APIResource(name=item["name"], url=f"http://sfapi.co/api/move/{item['id']}"))
+    return unique_attacks
 
-    # Get special moves APIResources
+
+async def fetchSpecials(name):
     response = dbMoves.fetch({"character": name, "type": "Special Moves"})
     special_moves = []
     for item in response.items:
-        special_moves.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
+        special_moves.append(APIResource(name=item["name"], url=f"http://sfapi.co/api/move/{item['id']}"))
+    return special_moves
 
-    # Get super arts APIResources
+
+async def fetchSupers(name):
     response = dbMoves.fetch({"character": name, "type": "Super Arts"})
     super_arts = []
     for item in response.items:
-        super_arts.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
+        super_arts.append(APIResource(name=item["name"], url=f"http://sfapi.co/api/move/{item['id']}"))
+    return super_arts
 
-    # Get throws APIResources
+async def fetchThrows(name):
     response = dbMoves.fetch({"character": name, "type": "Throws"})
     throws = []
     for item in response.items:
-        throws.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
+        throws.append(APIResource(name=item["name"], url=f"http://sfapi.co/api/move/{item['id']}"))
+    return throws
 
-    # Get common moves APIResources
+async def fetchCommons(name):
     response = dbMoves.fetch({"character": name, "type": "Common Moves"})
     common_moves = []
     for item in response.items:
-        common_moves.append(APIResource(name=item["name"], url=f"http://127.0.0.1:8000/move/{item['id']}"))
+        common_moves.append(APIResource(name=item["name"], url=f"http://sfapi.co/api/move/{item['id']}"))
+    return common_moves
 
+
+@app.get("/api/characters/{name}", response_model=CharacterOut)
+async def get_character(name: str):
+    character_response = await fetchName(name)
+    # Get normal moves APIResources
+    normal_moves = await fetchNormals(name)
+    
+    
+            
+    # Get unique attacks APIResources
+    unique_attacks = await fetchUniques(name)
+
+    # Get special moves APIResources
+    special_moves = await fetchSpecials(name)
+
+    # Get super arts APIResources
+    super_arts = await fetchSupers(name)
+
+    # Get throws APIResources
+    throws = await fetchThrows(name)
+
+    # Get common moves APIResources
+    common_moves = await fetchCommons(name)
 
     character_out = CharacterOut(
-        name=character_response.items[0]["name"],
-        vitality=character_response.items[0]["vitality"],
-        height=character_response.items[0]["height"],
-        weight=character_response.items[0]["weight"],
+        name=character_response[0]["name"],
+        vitality=character_response[0]["vitality"],
+        height=character_response[0]["height"],
+        weight=character_response[0]["weight"],
         normal_moves=normal_moves,
         unique_attacks=unique_attacks,
         special_moves=special_moves,
@@ -81,9 +112,10 @@ def get_character(name: str):
     
     return character_out
 
-@app.get("/api/move/{id}")
+@app.get("/api/move/{id}", response_model=Move)
 def get_move_info(id: int):
     move_response = dbMoves.fetch({"id": id})
     if (len(move_response.items) == 0):
         raise HTTPException(status_code=404, detail=f"Move with id {id} does not exist")
+    
     return move_response.items[0]
